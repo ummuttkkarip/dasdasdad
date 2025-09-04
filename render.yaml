@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: mftleather-chatbot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash start.sh
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mftleather-db
+          property: connectionString
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_API_VERSION
+        value: 2025-01-01-preview
+      - key: AZURE_SEARCH_ENDPOINT
+        sync: false
+      - key: AZURE_SEARCH_API_KEY
+        sync: false
+      - key: AZURE_SEARCH_INDEX
+        value: mftleather
+
+databases:
+  - name: mftleather-db
+    databaseName: mftleather_db
+    user: mftleather_user

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFT Leather Müşteri Hizmetleri</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .chat-header .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: contain;
+            background: white;
+            padding: 5px;
+        }
+
+        .chat-header .header-text h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .chat-header .header-text p {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 0.7em;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #messageInput:focus {
+            border-color: #007bff;
+        }
+
+        #sendButton {
+            padding: 12px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        #sendButton:hover {
+            background: #0056b3;
+        }
+
+        #sendButton:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .typing-dots {
+            display: inline-block;
+        }
+
+        .typing-dots::after {
+            content: '.';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            90%, 100% { content: ''; }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .end-chat-btn {
+            padding: 12px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .end-chat-btn:hover {
+            background: #c82333;
+        }
+
+        .feedback-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .feedback-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .rating-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .like-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .like-btn:hover {
+            background: #218838;
+        }
+
+        .dislike-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .dislike-btn:hover {
+            background: #c82333;
+        }
+
+        #feedbackText {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            resize: vertical;
+            margin: 15px 0;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .form-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #submitFeedback {
+            background: #007bff;
+            color: white;
+        }
+
+        #skipFeedback {
+            background: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="/static/logo.png" alt="MFT Leather Logo" class="logo">
+            <div class="header-text">
+                <h1>MFT Leather Müşteri Hizmetleri</h1>
+                <p>Size nasıl yardımcı olabilirim? Ürünlerimiz hakkında sorularınızı sorabilirsiniz.</p>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                Merhaba! Ben MFT Leather müşteri hizmetleri asistanıyım. 😊<br>
+                Ürünlerimiz, renkler, iade şartları vs. hakkında sorularınızı cevaplayabilirim.
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            Asistan yazıyor<span class="typing-dots"></span>
+        </div>
+        
+        <div class="chat-input">
+            <div class="input-container">
+                <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." maxlength="500">
+                <button id="sendButton">Gönder</button>
+                <button id="endChatButton" class="end-chat-btn">Sohbeti Bitir</button>
+            </div>
+        </div>
+        
+        <!-- Feedback Modal -->
+        <div id="feedbackModal" class="feedback-modal" style="display: none;">
+            <div class="feedback-content">
+                <h3>Sohbet Değerlendirmesi</h3>
+                <div class="rating-buttons">
+                    <button id="likeButton" class="rating-btn like-btn">👍 Beğendim</button>
+                    <button id="dislikeButton" class="rating-btn dislike-btn">👎 Beğenmedim</button>
+                </div>
+                <div id="feedbackForm" style="display: none;">
+                    <textarea id="feedbackText" placeholder="Lütfen deneyiminizi paylaşın..."></textarea>
+                    <div class="form-buttons">
+                        <button id="submitFeedback">Gönder</button>
+                        <button id="skipFeedback">Atla</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatBot {
+            constructor() {
+                this.messages = [];
+                this.conversationHistory = [];
+                this.maxHistory = 5;
+                this.sessionId = this.getOrCreateSessionId();
+                this.initializeElements();
+                this.bindEvents();
+                console.log('Session ID:', this.sessionId);
+            }
+
+            getOrCreateSessionId() {
+                // Check if session ID exists in localStorage
+                let sessionId = localStorage.getItem('chatbot_session_id');
+                
+                if (!sessionId) {
+                    // Generate new UUID-like session ID
+                    sessionId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                    localStorage.setItem('chatbot_session_id', sessionId);
+                }
+                
+                return sessionId;
+            }
+
+            initializeElements() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                this.endChatButton = document.getElementById('endChatButton');
+                this.feedbackModal = document.getElementById('feedbackModal');
+                this.likeButton = document.getElementById('likeButton');
+                this.dislikeButton = document.getElementById('dislikeButton');
+                this.feedbackForm = document.getElementById('feedbackForm');
+                this.feedbackText = document.getElementById('feedbackText');
+                this.submitFeedback = document.getElementById('submitFeedback');
+                this.skipFeedback = document.getElementById('skipFeedback');
+            }
+
+            bindEvents() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+                this.endChatButton.addEventListener('click', () => this.endChat());
+                this.likeButton.addEventListener('click', () => this.handleRating('like'));
+                this.dislikeButton.addEventListener('click', () => this.handleRating('dislike'));
+                this.submitFeedback.addEventListener('click', () => this.submitFeedbackData());
+                this.skipFeedback.addEventListener('click', () => this.closeFeedbackModal());
+            }
+
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
+                this.sendButton.disabled = true;
+                this.showTypingIndicator();
+
+                try {
+                    const response = await this.callChatAPI(message);
+                    this.hideTypingIndicator();
+                    this.addMessage(response, 'bot');
+                    // Session-based kayıt artık API'de otomatik yapılıyor
+                } catch (error) {
+                    this.hideTypingIndicator();
+                    this.addMessage('Üzgünüm, şu anda bir teknik sorun yaşıyorum. Lütfen daha sonra tekrar deneyin.', 'bot');
+                    console.error('Chat API Error:', error);
+                } finally {
+                    this.sendButton.disabled = false;
+                }
+            }
+
+            async callChatAPI(message) {
+                // Konuşma geçmişini güncelle
+                this.conversationHistory.push({role: 'user', content: message});
+                if (this.conversationHistory.length > this.maxHistory * 2) {
+                    this.conversationHistory = this.conversationHistory.slice(-this.maxHistory * 2);
+                }
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_history: this.conversationHistory,
+                        session_id: this.sessionId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Bot yanıtını geçmişe ekle
+                this.conversationHistory.push({role: 'assistant', content: data.response});
+                
+                return data.response;
+            }
+
+            addMessage(content, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                
+                // Bot mesajları için markdown desteği
+                if (sender === 'bot' && typeof marked !== 'undefined') {
+                    messageContent.innerHTML = marked.parse(content);
+                } else {
+                    messageContent.textContent = content;
+                }
+                
+                const messageTime = document.createElement('div');
+                messageTime.className = 'message-time';
+                messageTime.textContent = new Date().toLocaleTimeString('tr-TR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(messageTime);
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            showTypingIndicator() {
+                this.typingIndicator.style.display = 'block';
+                this.scrollToBottom();
+            }
+
+            hideTypingIndicator() {
+                this.typingIndicator.style.display = 'none';
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            endChat() {
+                // Sohbeti sonlandır ve feedback modalını göster
+                this.feedbackModal.style.display = 'flex';
+                // Session verisi zaten her mesajda kaydediliyor
+            }
+
+            handleRating(rating) {
+                this.currentRating = rating;
+                this.feedbackForm.style.display = 'block';
+                
+                // Feedback sorusunu rating'e göre değiştir
+                const placeholder = rating === 'like' ? 
+                    'Neyi beğendiniz? Size nasıl yardımcı olduk?' : 
+                    'Neyi beğenmediniz? Nasıl daha iyi olabiliriz?';
+                this.feedbackText.placeholder = placeholder;
+            }
+
+            async submitFeedbackData() {
+                const feedbackData = {
+                    rating: this.currentRating,
+                    feedback: this.feedbackText.value,
+                    timestamp: new Date().toISOString(),
+                    conversationHistory: this.conversationHistory,
+                    session_id: this.sessionId
+                };
+
+                try {
+                    // Feedback'i sunucuya gönder
+                    await fetch('/api/feedback', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(feedbackData)
+                    });
+                } catch (error) {
+                    console.log('Feedback kaydedilemedi:', error);
+                }
+
+                this.closeFeedbackModal();
+            }
+
+            closeFeedbackModal() {
+                this.feedbackModal.style.display = 'none';
+                this.feedbackForm.style.display = 'none';
+                this.feedbackText.value = '';
+                this.resetChat();
+            }
+
+            resetChat() {
+                // Sohbeti sıfırla
+                this.messages = [];
+                this.conversationHistory = [];
+                this.chatMessages.innerHTML = `
+                    <div class="welcome-message">
+                        Merhaba! Ben MFT Leather müşteri hizmetleri asistanıyım. 😊<br>
+                        Ürünlerimiz, renkler, iade şartları vs. hakkında sorularınızı cevaplayabilirim.
+                    </div>
+                `;
+            }
+
+            // Session-based kayıt sistemi kullanıldığı için bu fonksiyon artık gerekli değil
+            // Tüm veriler otomatik olarak her mesajda session dosyasına kaydediliyor
+        }
+
+        // Chatbot'u başlat
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatBot();
+        });
+    </script>
+</body>
+</html>
