@@ -14,7 +14,7 @@ import logging
 from datetime import datetime
 import uuid
 from sqlalchemy.orm import Session
-from .database import get_db, init_db, ChatSession, ChatMessage as DBChatMessage, UserFeedback
+from database import get_db, init_db, ChatSession, ChatMessage as DBChatMessage, UserFeedback
 
 # Load environment variables
 load_dotenv()
